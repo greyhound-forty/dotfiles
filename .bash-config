@@ -1,0 +1,280 @@
+# This function is run at the end of the bash startup
+
+custom_hook () {  # this colon is necessary if there's no content
+draw_line () {
+    # like to use a different date format?  Edit DATEFORMAT.
+    # The line length will adjust automagically.
+    DATEFORMAT="+%r"
+    DATESTRING=$(date ${DATEFORMAT})
+    DATELENGTH=${#DATESTRING}
+    ((WIDTH=COLUMNS-DATELENGTH-40))
+    echo -ne "${bldblk}"
+    for (( c=1; c<=$WIDTH; c++ )); do echo -n "-"; done
+    echo -n "|"
+    echo -ne " ${DATESTRING}${txtrst}\n"
+}
+
+function curlt() { echo "curl -sL -w "%{http_code} %{url_effective}\\n" "http://$1" -o /dev/null";echo ""; curl -sL -w "%{http_code} %{url_effective}\\n" "http://$1" -o /dev/null; } # //DESCRIPTION\\ Look for domain redirects. Example usage: curlt mydomain.com
+
+function pwgen () { printf 'How long should our password be?\n\n' ; read -e -s LENGTH ; < /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c$LENGTH; echo; } # //DESCRIPTION\\  Generate a random password - you choose character length
+
+function ttfb () { echo Retrieving the results from: ${*}; echo; curl -s -o /dev/null -w "Connect: %{time_connect}\nTTFB: %{time_starttransfer}\nTotal time: %{time_total} \n" ${*}; } # //DESCRIPTION\\ Get time to first byte
+
+function dign () { printf '\nNameservers reported by dig\n'; dig $* NS +short; printf '\nNameservers reported at the registrar\n'; whois $1|egrep -i 'Registrar|Reseller|name\ server'; } # //DESCRIPTION\\ Return nameservers for a domain. Uses dig and whois - Example usage: dign domain.com
+
+function update_hosts () { mv /etc/hosts /etc/orig.hosts; curl http://$1:3333/hosts.txt|tee /etc/hosts; } # //DESCRIPTION\\ Pull my latest list of hosts file
+
+function update_bash() {
+now=$(date +"%b-%d-%y")
+if [ "$(id -u)" != "0" ] 
+  then
+  mv $HOME/.bashrc $HOME/$now.bashrc; wget --no-check-certificate -O $HOME/.bashrc https://raw.githubusercontent.com/greyhound-forty/Configuration-Files/master/Bash/work.bashrc; 
+  mv $HOME/.bash-config $HOME/$now.bash-config; wget --no-check-certificate -O $HOME/.bash-config https://raw.githubusercontent.com/greyhound-forty/Configuration-Files/master/Bash/work.bash-config
+  else 
+  mv /root/.bashrc /root/$now.bashrc; wget --no-check-certificate -O /root/.bashrc https://raw.githubusercontent.com/greyhound-forty/Configuration-Files/master/Bash/work.bashrc;
+  mv /root/.bash-config /root/$now.bash-config; wget --no-check-certificate -O /root/.bash-config https://raw.githubusercontent.com/greyhound-forty/Configuration-Files/master/Bash/work.bash-config; 
+  fi;
+};
+
+
+oslist() { wget --no-check-certificate -O ~/oslist.txt https://copy.com/1Nun34gsxpXF; }
+oscheck
+}
+
+function digt () { dig +trace $*; } # //DESCRIPTION\\ Run a dig with trace on a domain
+
+function digs () { dig +short $*; } # //DESCRIPTION\\ Return just the short answer for the dig command
+
+function alldns () { for NS in $(dig +short NS ${1} | cut -d " " -f 1 | sed 's/\.$//g'); do echo -n "${NS}: "; dig +short ${1} @${NS}; done; } # //DESCRIPTION\\ - DNS lookup against all of a domain's nameservers
+
+function digref () { for i in $(seq 1 10) ; do echo "$i ";dig @"${2}" $1 | egrep 'NXDOMAIN|NOERROR|SERVFAIL' ; sleep 4; done; } # //DESCRIPTION\\ For loop to query a domain against a set of nameservers. Example usage digref domain.com ns1.domain.com
+
+highlight () { perl -pe "s/$1/\e[1;31;43m$&\e[0m/g"; } # //DESCRIPTION\\ - highlight text in a pipeline, ex: cat file | highlight "searchstring".
+
+function mkdircd () { mkdir -p "$@" && eval cd "\"\$$#\""; } # //DESCRIPTION\\
+
+function sr () { ssh root@$*; } # //DESCRIPTION\\ SSH as root
+
+function nm () { nmap -P0 -T4 -sV -p- $*; } # //DESCRIPTION\\ Nmap scan on all ports for a given IP address. Example usage: nm 192.168.1.1
+
+function netsort () { netstat -nt | awk '{ print $5 }' | egrep -o "([0-9]*\.){3}[0-9]*" | sort | uniq -c | sort -n; } # //DESCRIPTION\\ Current favorite netstat sorted string
+
+function testfile(){ read -r -p "Filename to create? " fnm; read -r -p "Size to assign to file? [G >> GB and M >> Mb] " fsz; touch $fnm && shred -n0 -z -s$fsz $fnm; } # //DESCRIPTION\\ Create a test file with the size of your choosing - the command will prompt you for the name and size of the file
+
+function who () { echo -----------; echo $1; whois $1| grep -A2 -i name\ server; } # //DESCRIPTION\\ Get authoratative ns records
+
+function digall () { dig +nocmd $1 any +multiline +noall +answer; } # //DESCRIPTION\\ Dig all records for a domain
+
+function iprem() {
+if [ -n "${1}" ]; then
+IP=${1}
+else
+read -r -p "What IP are we removing? " IP
+fi
+ssh-keygen -f ".ssh/known_hosts" -R $IP
+} # //DESCRIPTION\\ Remove an IP from your known hosts file
+
+function dux () { echo -e "Reporting usage for: $(pwd)\n";du -hxs * 2> /dev/null|grep '^[0-9.]\+[MG]'; } # //DESCRIPTION\\ Get readable output for space usage in a directory
+
+function notice () { echo -e '\n\E[37;44m'"\033[1m${*}\033[0m\n"; } # //DESCRIPTION\\ Used for some colored output
+
+function mtr300 () { echo -e "Performing 300 Count MTR from server $hst to $1\n"; mtr -rc 300 $1; notice ~~~~~~~~; mtr -rc 300 -n $1; } # //DESCRIPTION\\ - Perform a 300 count MTR to an IP with DNS on and off
+
+function slinst () {
+wget http://python-distribute.org/distribute_setup.py && python distribute_setup.py;
+curl -OL https://github.com/softlayer/softlayer-api-python-client/tarball/master;
+tar xzf master && cd softlayer-softlayer-api-python-client-* ;
+python setup.py install && sl config setup 
+} # //DESCRIPTION\\ Install the SL Python CI tool
+
+function ban_drop () { iptables -I INPUT -s ${1} -j DROP; iptables -A OUTPUT -d ${1} -j DROP;} # //DESCRIPTION\\ Ban IP with iptables
+
+function allow_ip () { iptables -I INPUT -s ${1} -j ACCEPT; iptables -A OUTPUT -d ${1} -j ACCEPT;} # //DESCRIPTION\\ Allow IP with iptables
+
+function stik_api() { curl -d title='$1' -d name='Ryan' --data-urlencode text@$2 http://stikked.inchhighassassins.com/api/create }
+
+export MARKPATH=$HOME/.marks
+function jump {
+    cd -P "$MARKPATH/$1" 2>/dev/null || echo "No such mark: $1"
+} # //DESCRIPTION\\ Jump to Marked directory. More info here http://jeroenjanssens.com/2013/08/16/quickly-navigate-your-filesystem-from-the-command-line.html
+function mark {
+    mkdir -p "$MARKPATH"; ln -s "$(pwd)" "$MARKPATH/$1"
+} # //DESCRIPTION\\ Mark a path/directory. More info here http://jeroenjanssens.com/2013/08/16/quickly-navigate-your-filesystem-from-the-command-line.html
+function unmark {
+    rm -i "$MARKPATH/$1"
+} # //DESCRIPTION\\ Un-mark a path/directory. More info here http://jeroenjanssens.com/2013/08/16/quickly-navigate-your-filesystem-from-the-command-line.html
+function marks {
+    ls -l "$MARKPATH" | sed 's/  / /g' | cut -d' ' -f9- | sed 's/ -/\t-/g' && echo
+} # //DESCRIPTION\\ List all 'marked' directories. More info here http://jeroenjanssens.com/2013/08/16/quickly-navigate-your-filesystem-from-the-command-line.html
+_completemarks() {
+  local curw=${COMP_WORDS[COMP_CWORD]}
+  local wordlist=$(find $MARKPATH -type l -printf "%f\n")
+  COMPREPLY=($(compgen -W '${wordlist[@]}' -- "$curw"))
+  return 0
+} # //DESCRIPTION\\ Jump to Marked directory. More info here http://jeroenjanssens.com/2013/08/16/quickly-navigate-your-filesystem-from-the-command-line.html
+
+complete -F _completemarks jump unmark
+
+#function functions () { FUNCTION_COUNT=$(\grep '^function' /proc/$$/fd/75 | wc -l) ; for i in `seq 1 1 $FUNCTION_COUNT` ; do echo -e "`cat /proc/$$/fd/75 |\grep '^function'|head -n $i | tail -1| awk '{print "'$LightRed'"$2}' || cat /dev/fd/75 |head -n $i | tail -1 |awk '/^function/{print $2}'|| cat /dev/fd/75 |head -n $i | tail -1| awk '/^function/{print "'$LightRed'"$2}'` `\grep -Poi '# [/][/]DESCRIPTION[/][/](.*)' /proc/$$/fd/75 | head -n $i | tail -1 |cut -d " " -f3-200 | awk '{print "'$LightBlue'"$0}'`" ; done ; } # //DESCRIPTION\\ - This usage information.
+#alias FUNCTIONS="`printf "$(functions)" "%s\n"`"
+
+strip_tickets() { for i in `cat $1|awk '{print $1}'`; do printf "[$i](https://internal.softlayer.com/Ticket/ticketPreview/$i)  "; done }
+
+function s1 () { 
+file=$HOME/ssh_config
+if [ ! -e "$file" ] ; then
+    touch "$file"
+fi
+/usr/bin/ssh -t -F $HOME/ssh_config "$@" "export RUSER=$(whoami) ; echo $(whoami) logging in at $(date) >> .bash_history ; if [ \`uname -n | grep rescue | wc -l\` = 1 ] ; then echo "This is rescue" ; if [ ! -f /etc/redhat-release ] ; then apt-get install -y lsof curl screen bc ; else yum -y install bc screen lsof curl smartmontools dos2unix ; fi ; fi ; if [ ! -f /usr/bin/curl -a -f /usr/bin/apt-get ] ; then apt-get install -y curl bc lsof screen ; fi ; scr=\`curl -s https://raw.github.com/greyhound-forty/Scripts/master/sl_functions.sh\`; exec 75<>\`mktemp -u /tmp/tmp.XXXXXXXXXX\`; printf   \"%s\n\" \"\$scr\" >&75; if [ -e /bin/bash ] ; then /bin/bash --rcfile /dev/fd/75 -i; else /usr/local/bin/bash --rcfile <(curl -s https://raw.github.com/greyhound-forty/Scripts/master/sl_functions.sh) -i; fi ;" ; }
+
+## Set some additional Environmental variables
+
+## Make the man page entries a bit more readable
+man() {
+        env \
+                LESS_TERMCAP_mb=$(printf "\e[1;31m") \
+                LESS_TERMCAP_md=$(printf "\e[1;31m") \
+                LESS_TERMCAP_me=$(printf "\e[0m") \
+                LESS_TERMCAP_se=$(printf "\e[0m") \
+                LESS_TERMCAP_so=$(printf "\e[1;44;33m") \
+                LESS_TERMCAP_ue=$(printf "\e[0m") \
+                LESS_TERMCAP_us=$(printf "\e[1;32m") \
+                        man "$@"
+}
+
+showcolors () {
+    echo "=== Basic Colors ==="
+    loadcolors
+    for X in {0..255}; do
+        [ $X == 16 ] && echo && echo "=== Extended Colors ==="
+        echo -e "${X}: \e[38;5;${X}m>>>${txtrst}"
+    done
+}
+
+function change_pass() { hst=`hostname -f`; printf 'How long should our password be?\n\n' ; read -e -s LENGTH ; < /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c$LENGTH|tee $HOME/new_pass; echo; printf 'Where are we sending this new password?\n\n' ; read -e MAIL; mail -s "new pass for user $(whoami) on $hst" $MAIL < $HOME/new_pass; echo; echo "Don't forget to run passwd";  }
+
+function cdl() { cd "$@"; pwd; ls -al; }
+
+function up()
+{
+    dir=""
+    if [ -z "$1" ]; then
+        dir=..
+    elif [[ $1 =~ ^[0-9]+$ ]]; then
+        x=0
+        while [ $x -lt ${1:-1} ]; do
+            dir=${dir}../
+            x=$(($x+1))
+        done
+    else
+        dir=${PWD%/$1/*}/$1
+    fi
+    cd "$dir"; }
+
+ cd_func ()
+ {
+   local x2 the_new_dir adir index
+   local -i cnt
+
+   if [[ $1 ==  "--" ]]; then
+     dirs -v
+     return 0
+   fi
+
+   the_new_dir=$1
+   [[ -z $1 ]] && the_new_dir=$HOME
+
+   if [[ ${the_new_dir:0:1} == '-' ]]; then
+
+     # Extract dir N from dirs
+     index=${the_new_dir:1}
+     [[ -z $index ]] && index=1
+     adir=$(dirs +$index)
+     [[ -z $adir ]] && return 1
+     the_new_dir=$adir
+   fi
+
+
+    #'~' has to be substituted by ${HOME}
+   [[ ${the_new_dir:0:1} == '~' ]] && the_new_dir="${HOME}${the_new_dir:1}"
+
+
+    #Now change to the new dir and add to the top of the stack
+   pushd "${the_new_dir}" > /dev/null
+   [[ $? -ne 0 ]] && return 1
+   the_new_dir=$(pwd)
+
+
+   # Trim down everything beyond 11th entry
+   popd -n +11 2>/dev/null 1>/dev/null
+
+
+  #  Remove any other occurence of this dir, skipping the top of the stack
+   for ((cnt=1; cnt <= 10; cnt++)); do
+     x2=$(dirs +${cnt} 2>/dev/null)
+     [[ $? -ne 0 ]] && return 0
+     [[ ${x2:0:1} == '~' ]] && x2="${HOME}${x2:1}"
+     if [[ "${x2}" == "${the_new_dir}" ]]; then
+       popd -n +$cnt 2>/dev/null 1>/dev/null
+       cnt=cnt-1
+     fi
+   done
+
+   return 0
+ }
+
+ alias cd=cd_func
+
+bsh=`which bash`
+## General Aliases
+alias grep='grep --color=auto'
+alias egrep='egrep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias cront='EDITOR=nano crontab -e'
+alias ophelia='ssh ryan@ophelia -p 33180'
+alias mercury='ssh ryan@mercury -p 3366'
+alias hyperion='ssh ryan@hyperion -p 65367'
+alias io='ssh ryan@io -p 65361'
+alias proteus='ssh ryan@proteus -p 33242'
+alias triton='ssh ryan@triton -p 65179'
+alias despina='ssh ryan@despina -p 65180'
+alias miranda='ssh ryan@miranda -p 65181'
+alias telesto='ssh ryan@telesto -p 33182'
+alias desdemona='ssh ryan@desdemona -p 33178'
+alias ghost='ssh ryan@ghost -p 65164'
+alias saturn='ssh ryan@saturn -p 65324'
+alias callisto='ssh ryan@callisto -p 65195'
+alias neptune='ssh ryan@neptune -p 33243'
+alias h='history'
+alias nocomment='grep -Ev '\''^(#|$)'\'''
+alias j='jobs -l'
+alias c='clear'
+alias nano='nano -w'
+alias mkdir='mkdir -p'
+alias ll='ls -la --color=auto'
+alias ..="cd .."
+alias ..2="cd ../.."
+alias ..3="cd ../../.."
+alias ..4="cd ../../../.."
+alias ..5="cd ../../../../.."
+alias td="$bsh ~/todo/todo.sh"
+alias tdh="$bsh ~/todo/todo.sh -h"
+alias less='less -r'                           ##raw control characters
+alias whence='type -a'                         #where, of a sort
+alias grep='grep --color'                      #show differences in colour
+alias egrep='egrep --color=auto'               #show differences in colour
+alias fgrep='fgrep --color=auto'               #show differences in colour
+alias ls='ls -hF --color=tty'                  #classify files in colour
+alias dir='ls --color=auto --format=vertical'  # 
+alias vdir='ls --color=auto --format=long'     #
+alias ll='ls -l'                               #long list
+alias la='ls -A'                               # all but . and ..
+alias l='ls -CF'  
+## Arch Specific Aliases
+alias sli='systemctl list-units'
+alias rel='echo systemctl --system daemon-reload;systemctl --system daemon-reload'
+}
+
+UPDATE_BASHCFG=1      # Controls the automatic update process
+UPDATE_DIRCOLORS=1   # Determines whether to update .dir_colors from github
+LINE_ENABLED=1      # Uncomment this line to enable the horizontal line above the prompt
