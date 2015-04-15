@@ -30,8 +30,8 @@
 #                                                        #
 ##########################################################
 
-UPDATEURL="https://raw.github.com/greyhound-forty/Config-Files/master/"
-UPDATEURL2="https://raw.github.com/greyhound-forty/Configs/master/"
+UPDATEURL="https://raw.github.com/greyhound-forty/dotfiles/master/"
+UPDATEURL2="https://raw.github.com/greyhound-forty/dotfiles/master/"
   
 updatefile ()
 {
@@ -144,20 +144,6 @@ highlight() {
     perl -pe "s/$1/\e[1;31;43m$&\e[0m/g"
 }
 
-# DNS lookup against all of a domain's nameservers
-alldns () {
-    for NS in $(dig +short NS ${1} | cut -d " " -f 1 | sed 's/\.$//g'); do
-        echo -n "${NS}: "; dig +short ${1} @${NS}
-    done
-}
-
-scrub() {
-    rm -f /home/ryan_test/.bash-config;
-    wget -O /home/ryan_test/.bash-config https://raw.github.com/greyhound-forty/Testing/master/.bash-config;
-    exec bash;
-}
-
-# my current favorite netstat sorted string
 netsort () { netstat -nt | awk '{ print $5 }' | egrep -o "([0-9]*\.){3}[0-9]*" | sort | uniq -c | sort -n; }
 
 # shortcut for downloading packages from the AUR, ex: aurget packagename

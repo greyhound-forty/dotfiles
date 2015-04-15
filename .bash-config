@@ -22,27 +22,6 @@ function ttfb () { echo Retrieving the results from: ${*}; echo; curl -s -o /dev
 
 function dign () { printf '\nNameservers reported by dig\n'; dig $* NS +short; printf '\nNameservers reported at the registrar\n'; whois $1|egrep -i 'Registrar|Reseller|name\ server'; } # //DESCRIPTION\\ Return nameservers for a domain. Uses dig and whois - Example usage: dign domain.com
 
-function update_hosts () { mv /etc/hosts /etc/orig.hosts; curl http://$1:3333/hosts.txt|tee /etc/hosts; } # //DESCRIPTION\\ Pull my latest list of hosts file
-
-function update_bash() {
-now=$(date +"%b-%d-%y")
-if [ "$(id -u)" != "0" ] 
-  then
-  mv $HOME/.bashrc $HOME/$now.bashrc; wget --no-check-certificate -O $HOME/.bashrc https://raw.githubusercontent.com/greyhound-forty/Configuration-Files/master/Bash/work.bashrc; 
-  mv $HOME/.bash-config $HOME/$now.bash-config; wget --no-check-certificate -O $HOME/.bash-config https://raw.githubusercontent.com/greyhound-forty/Configuration-Files/master/Bash/work.bash-config
-  else 
-  mv /root/.bashrc /root/$now.bashrc; wget --no-check-certificate -O /root/.bashrc https://raw.githubusercontent.com/greyhound-forty/Configuration-Files/master/Bash/work.bashrc;
-  mv /root/.bash-config /root/$now.bash-config; wget --no-check-certificate -O /root/.bash-config https://raw.githubusercontent.com/greyhound-forty/Configuration-Files/master/Bash/work.bash-config; 
-  fi;
-};
-
-
-oslist() { wget --no-check-certificate -O ~/oslist.txt https://copy.com/1Nun34gsxpXF; }
-oscheck
-}
-
-function digt () { dig +trace $*; } # //DESCRIPTION\\ Run a dig with trace on a domain
-
 function digs () { dig +short $*; } # //DESCRIPTION\\ Return just the short answer for the dig command
 
 function alldns () { for NS in $(dig +short NS ${1} | cut -d " " -f 1 | sed 's/\.$//g'); do echo -n "${NS}: "; dig +short ${1} @${NS}; done; } # //DESCRIPTION\\ - DNS lookup against all of a domain's nameservers
@@ -79,19 +58,10 @@ function dux () { echo -e "Reporting usage for: $(pwd)\n";du -hxs * 2> /dev/null
 function notice () { echo -e '\n\E[37;44m'"\033[1m${*}\033[0m\n"; } # //DESCRIPTION\\ Used for some colored output
 
 function mtr300 () { echo -e "Performing 300 Count MTR from server $hst to $1\n"; mtr -rc 300 $1; notice ~~~~~~~~; mtr -rc 300 -n $1; } # //DESCRIPTION\\ - Perform a 300 count MTR to an IP with DNS on and off
-
-function slinst () {
-wget http://python-distribute.org/distribute_setup.py && python distribute_setup.py;
-curl -OL https://github.com/softlayer/softlayer-api-python-client/tarball/master;
-tar xzf master && cd softlayer-softlayer-api-python-client-* ;
-python setup.py install && sl config setup 
-} # //DESCRIPTION\\ Install the SL Python CI tool
-
 function ban_drop () { iptables -I INPUT -s ${1} -j DROP; iptables -A OUTPUT -d ${1} -j DROP;} # //DESCRIPTION\\ Ban IP with iptables
 
 function allow_ip () { iptables -I INPUT -s ${1} -j ACCEPT; iptables -A OUTPUT -d ${1} -j ACCEPT;} # //DESCRIPTION\\ Allow IP with iptables
 
-function stik_api() { curl -d title='$1' -d name='Ryan' --data-urlencode text@$2 http://stikked.inchhighassassins.com/api/create }
 
 export MARKPATH=$HOME/.marks
 function jump {
