@@ -1,5 +1,7 @@
-export ZSH=$HOME/github/heim/ZSH
+export ZSH=$HOME/ZSH
 hst=$(hostname -s)
+
+# Set theme based on hostname
 
 if [ "$hst" = helios ] ; then
    ZSH_THEME="norm"
@@ -13,9 +15,7 @@ else
     ZSH_THEME="kphoen"
 fi
 
-#jupiter theme
-#ZSH_THEME="kphoen"
-
+## PLugins I use for  oh my zsh
 plugins=(git docker debian zsh-syntax-highlighting)
 
 source $ZSH/oh-my-zsh.sh
@@ -58,7 +58,7 @@ if (( ${+terminfo[smkx]} )) && (( ${+terminfo[rmkx]} )); then
     zle -N zle-line-finish
 fi
 
-export PATH="$PATH:$HOME/.rvm/gems/ruby-2.0.0-p598/bin:$HOME/heim/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
+export PATH="$PATH:$HOME/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
 
 source $ZSH/custom/functions.zsh
 
